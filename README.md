@@ -1,6 +1,6 @@
 # Grafana Cursor Plugin
 
-Cursor Marketplace plugin that exposes the official [Grafana MCP server](https://github.com/grafana/mcp-grafana) for AI-assisted observability workflows.
+Dual-format plugin that exposes the official [Grafana MCP server](https://github.com/grafana/mcp-grafana) for AI-assisted observability workflows in both **Cursor** and **Claude Code**.
 
 ## Getting started
 
@@ -17,7 +17,7 @@ Cursor Marketplace plugin that exposes the official [Grafana MCP server](https:/
 
    For Grafana Cloud, use your instance URL instead (e.g. `https://myinstance.grafana.net`).
 
-4. Install the plugin from the Cursor Marketplace.
+4. Install the plugin from the Cursor Marketplace or Claude Code plugin registry.
 
 ## What's included
 
@@ -26,12 +26,31 @@ Cursor Marketplace plugin that exposes the official [Grafana MCP server](https:/
 
 See [plugins/grafana/README.md](plugins/grafana/README.md) for the full tool reference.
 
+## Dual-format architecture
+
+Each plugin ships manifests for both platforms while sharing all content (rules, skills, MCP config):
+
+```text
+plugins/grafana/
+├── .cursor-plugin/plugin.json   # Cursor manifest
+├── .claude-plugin/plugin.json   # Claude Code manifest
+├── mcp.json                     # Shared MCP server config
+└── rules/                       # Shared rules
+```
+
+Root marketplace manifests:
+
+- `.cursor-plugin/marketplace.json` — Cursor Marketplace
+- `.claude-plugin/marketplace.json` — Claude Code plugin registry
+
+Versions are kept in sync across both formats and validated in CI.
+
 ## Development
 
-To validate the plugin structure:
+To validate the plugin structure (both formats):
 
 ```bash
 node scripts/validate-template.mjs
 ```
 
-To add more plugins, create a new directory under `plugins/` and register it in `.cursor-plugin/marketplace.json`. See `docs/add-a-plugin.md` for details.
+To add more plugins, create a new directory under `plugins/` and register it in both marketplace manifests. See `docs/add-a-plugin.md` for details.

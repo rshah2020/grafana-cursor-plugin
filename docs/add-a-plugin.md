@@ -1,6 +1,6 @@
 # Add a plugin
 
-Add a new plugin under `plugins/` and register it in `.cursor-plugin/marketplace.json`.
+Add a new plugin under `plugins/` and register it in both marketplace manifests.
 
 ## 1. Create plugin directory
 
@@ -10,13 +10,14 @@ Create a new folder:
 plugins/my-new-plugin/
 ```
 
-Add the required manifest:
+Add the required manifests for both formats:
 
 ```text
 plugins/my-new-plugin/.cursor-plugin/plugin.json
+plugins/my-new-plugin/.claude-plugin/plugin.json
 ```
 
-Example manifest:
+Both manifests use the same schema. Example:
 
 ```json
 {
@@ -31,9 +32,11 @@ Example manifest:
 }
 ```
 
+Keep the two `plugin.json` files identical — the validation script will flag version mismatches.
+
 ## 2. Add plugin components
 
-Add only the components you need:
+Add only the components you need. These are shared across both formats:
 
 - `rules/` with `.mdc` files (YAML frontmatter required)
 - `skills/<skill-name>/SKILL.md` (YAML frontmatter required)
@@ -43,9 +46,9 @@ Add only the components you need:
 - `mcp.json` for MCP server definitions
 - `assets/logo.svg` for marketplace display
 
-## 3. Register in marketplace manifest
+## 3. Register in both marketplace manifests
 
-Edit `.cursor-plugin/marketplace.json` and append a new entry:
+Edit `.cursor-plugin/marketplace.json` **and** `.claude-plugin/marketplace.json`, appending a new entry to each:
 
 ```json
 {
@@ -55,7 +58,7 @@ Edit `.cursor-plugin/marketplace.json` and append a new entry:
 }
 ```
 
-`source` is the relative path from the repository root to the plugin folder.
+Use `plugins/my-new-plugin` as the source in the Cursor manifest and `./plugins/my-new-plugin` in the Claude Code manifest (with leading `./`).
 
 ## 4. Validate
 
@@ -63,13 +66,15 @@ Edit `.cursor-plugin/marketplace.json` and append a new entry:
 node scripts/validate-template.mjs
 ```
 
-Fix all reported errors before committing.
+The script validates both formats and checks cross-format consistency. Fix all reported errors before committing.
 
 ## 5. Common pitfalls
 
 - Plugin `name` not kebab-case.
 - `source` path in marketplace manifest does not match folder name.
-- Missing `.cursor-plugin/plugin.json` in plugin folder.
+- Missing `.cursor-plugin/plugin.json` or `.claude-plugin/plugin.json` in plugin folder.
+- Version mismatch between the two `plugin.json` files.
 - Missing frontmatter keys (`name`, `description`) in skills, agents, or commands.
 - Rule files missing frontmatter `description`.
 - Broken relative paths for `logo`, `hooks`, or `mcpServers` in manifest files.
+- Forgetting to update one of the two marketplace manifests.
