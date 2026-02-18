@@ -8,6 +8,8 @@ const repoRoot = process.cwd();
 const errors = [];
 const warnings = [];
 
+const FORMATS = ["cursor-plugin", "claude-plugin"];
+
 const pluginNamePattern = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const marketplaceNamePattern = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
@@ -236,54 +238,53 @@ function resolveMarketplaceSource(source, pluginRoot) {
   if (typeof source !== "string" || source.length === 0) {
     return null;
   }
+  const cleaned = source.replace(/^\.\//, "");
   if (!pluginRoot) {
-    return source;
+    return cleaned;
   }
   const normalizedRoot = pluginRoot.replace(/\\/g, "/").replace(/\/+$/, "");
-  const normalizedSource = source.replace(/\\/g, "/");
+  const normalizedSource = cleaned.replace(/\\/g, "/");
   if (normalizedSource === normalizedRoot || normalizedSource.startsWith(`${normalizedRoot}/`)) {
     return normalizedSource;
   }
   return `${normalizedRoot}/${normalizedSource}`;
 }
 
-async function main() {
-  const marketplacePath = path.join(repoRoot, ".cursor-plugin", "marketplace.json");
-  const marketplace = await readJsonFile(marketplacePath, "Marketplace manifest");
+async function validateFormat(format) {
+  const marketplacePath = path.join(repoRoot, `.${format}`, "marketplace.json");
+  const marketplace = await readJsonFile(marketplacePath, `[${format}] Marketplace manifest`);
   if (!marketplace) {
-    summarizeAndExit();
-    return;
+    return null;
   }
 
   if (typeof marketplace.name !== "string" || !marketplaceNamePattern.test(marketplace.name)) {
     addError(
-      'Marketplace "name" must be lowercase kebab-case and start/end with an alphanumeric character.'
+      `[${format}] Marketplace "name" must be lowercase kebab-case and start/end with an alphanumeric character.`
     );
   }
 
   if (!marketplace.owner || typeof marketplace.owner.name !== "string" || marketplace.owner.name.length === 0) {
-    addError('Marketplace "owner.name" is required.');
+    addError(`[${format}] Marketplace "owner.name" is required.`);
   }
 
   if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
-    addError('Marketplace "plugins" must be a non-empty array.');
-    summarizeAndExit();
-    return;
+    addError(`[${format}] Marketplace "plugins" must be a non-empty array.`);
+    return marketplace;
   }
 
   const pluginRoot = marketplace.metadata?.pluginRoot;
   if (pluginRoot !== undefined) {
     if (typeof pluginRoot !== "string" || !isSafeRelativePath(pluginRoot)) {
-      addError('Marketplace "metadata.pluginRoot" must be a safe relative path.');
+      addError(`[${format}] Marketplace "metadata.pluginRoot" must be a safe relative path.`);
     } else {
       const pluginRootAbs = path.join(repoRoot, pluginRoot);
-      await ensureDirectory(pluginRootAbs, 'Marketplace "metadata.pluginRoot"');
+      await ensureDirectory(pluginRootAbs, `[${format}] Marketplace "metadata.pluginRoot"`);
     }
   }
 
   const seenNames = new Set();
   for (const [index, entry] of marketplace.plugins.entries()) {
-    const label = `plugins[${index}]`;
+    const label = `[${format}] plugins[${index}]`;
 
     if (!entry || typeof entry !== "object") {
       addError(`${label} must be an object.`);
@@ -296,7 +297,7 @@ async function main() {
     }
 
     if (seenNames.has(entry.name)) {
-      addError(`Duplicate plugin name in marketplace manifest: "${entry.name}"`);
+      addError(`[${format}] Duplicate plugin name in marketplace manifest: "${entry.name}"`);
     }
     seenNames.add(entry.name);
 
@@ -316,21 +317,21 @@ async function main() {
       continue;
     }
 
-    const manifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
-    const pluginManifest = await readJsonFile(manifestPath, `${entry.name} plugin manifest`);
+    const manifestPath = path.join(pluginDir, `.${format}`, "plugin.json");
+    const pluginManifest = await readJsonFile(manifestPath, `[${format}] ${entry.name} plugin manifest`);
     if (!pluginManifest) {
       continue;
     }
 
     if (typeof pluginManifest.name !== "string" || !pluginNamePattern.test(pluginManifest.name)) {
       addError(
-        `${entry.name}: "name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.`
+        `[${format}] ${entry.name}: "name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.`
       );
     }
 
     if (pluginManifest.name && pluginManifest.name !== entry.name) {
       addError(
-        `${entry.name}: marketplace entry name does not match plugin.json name ("${pluginManifest.name}").`
+        `[${format}] ${entry.name}: marketplace entry name does not match plugin.json name ("${pluginManifest.name}").`
       );
     }
 
@@ -338,22 +339,94 @@ async function main() {
     for (const field of manifestFields) {
       const values = extractPathValues(pluginManifest[field]);
       for (const value of values) {
-        await validateReferencedPath(pluginDir, field, value, entry.name);
+        await validateReferencedPath(pluginDir, field, value, `[${format}] ${entry.name}`);
       }
     }
 
-    await validateComponentFrontmatter(pluginDir, entry.name);
+    await validateComponentFrontmatter(pluginDir, `[${format}] ${entry.name}`);
 
     const hooksPath = path.join(pluginDir, "hooks", "hooks.json");
     if (!(await pathExists(hooksPath))) {
-      addWarning(`${entry.name}: no hooks/hooks.json file found (only needed when using hooks).`);
+      addWarning(`[${format}] ${entry.name}: no hooks/hooks.json file found (only needed when using hooks).`);
     }
 
     const mcpPath = path.join(pluginDir, "mcp.json");
     if (!(await pathExists(mcpPath))) {
-      addWarning(`${entry.name}: no mcp.json file found (only needed when using MCP servers).`);
+      addWarning(`[${format}] ${entry.name}: no mcp.json file found (only needed when using MCP servers).`);
     }
   }
+
+  return marketplace;
+}
+
+function validateDualFormatConsistency(cursorMarketplace, claudeMarketplace) {
+  if (!cursorMarketplace || !claudeMarketplace) {
+    return;
+  }
+
+  const cursorVersion = cursorMarketplace.metadata?.version;
+  const claudeVersion = claudeMarketplace.metadata?.version;
+  if (cursorVersion && claudeVersion && cursorVersion !== claudeVersion) {
+    addError(
+      `Marketplace versions don't match (cursor-plugin: ${cursorVersion}, claude-plugin: ${claudeVersion}).`
+    );
+  }
+
+  const cursorNames = new Set((cursorMarketplace.plugins ?? []).map((p) => p.name));
+  const claudeNames = new Set((claudeMarketplace.plugins ?? []).map((p) => p.name));
+
+  for (const name of cursorNames) {
+    if (!claudeNames.has(name)) {
+      addError(`Plugin "${name}" exists in cursor-plugin marketplace but not in claude-plugin.`);
+    }
+  }
+  for (const name of claudeNames) {
+    if (!cursorNames.has(name)) {
+      addError(`Plugin "${name}" exists in claude-plugin marketplace but not in cursor-plugin.`);
+    }
+  }
+}
+
+async function validatePluginVersionConsistency() {
+  const pluginsDir = path.join(repoRoot, "plugins");
+  if (!(await pathExists(pluginsDir))) {
+    return;
+  }
+
+  const entries = await fs.readdir(pluginsDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+
+    const pluginDir = path.join(pluginsDir, entry.name);
+    const cursorManifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
+    const claudeManifestPath = path.join(pluginDir, ".claude-plugin", "plugin.json");
+
+    const hasCursor = await pathExists(cursorManifestPath);
+    const hasClaude = await pathExists(claudeManifestPath);
+
+    if (hasCursor && hasClaude) {
+      const cursorManifest = await readJsonFile(cursorManifestPath, `${entry.name} cursor plugin.json`);
+      const claudeManifest = await readJsonFile(claudeManifestPath, `${entry.name} claude plugin.json`);
+
+      if (cursorManifest && claudeManifest) {
+        if (cursorManifest.version !== claudeManifest.version) {
+          addError(
+            `Plugin "${entry.name}" versions don't match (cursor-plugin: ${cursorManifest.version}, claude-plugin: ${claudeManifest.version}).`
+          );
+        }
+      }
+    }
+  }
+}
+
+async function main() {
+  const results = {};
+  for (const format of FORMATS) {
+    results[format] = await validateFormat(format);
+  }
+
+  validateDualFormatConsistency(results["cursor-plugin"], results["claude-plugin"]);
+  await validatePluginVersionConsistency();
 
   summarizeAndExit();
 }
@@ -375,7 +448,7 @@ function summarizeAndExit() {
     process.exit(1);
   }
 
-  console.log("Validation passed.");
+  console.log("Validation passed (cursor-plugin + claude-plugin).");
 }
 
 await main();
