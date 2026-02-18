@@ -1,6 +1,6 @@
-# Grafana Cursor Plugin
+# Grafana AI Marketplace
 
-Dual-format plugin that exposes the official [Grafana MCP server](https://github.com/grafana/mcp-grafana) for AI-assisted observability workflows in both **Cursor** and **Claude Code**.
+Dual-format plugin marketplace that exposes the official [Grafana MCP server](https://github.com/grafana/mcp-grafana) for AI-assisted observability workflows in both **Cursor** and **Claude Code**.
 
 ## Getting started
 
