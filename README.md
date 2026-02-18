@@ -4,15 +4,7 @@ Cursor Marketplace plugin that exposes the official [Grafana MCP server](https:/
 
 ## Getting started
 
-1. Install `mcp-grafana` (choose one):
-
-   ```bash
-   # From source (requires Go)
-   go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest
-
-   # Or download a binary from GitHub releases
-   # https://github.com/grafana/mcp-grafana/releases
-   ```
+1. [Docker](https://docs.docker.com/get-docker/) must be installed and running.
 
 2. Create a [service account](https://grafana.com/docs/grafana/latest/administration/service-accounts/) in Grafana with at least **Viewer** role (or **Editor** for write operations). Generate a token.
 
@@ -23,11 +15,13 @@ Cursor Marketplace plugin that exposes the official [Grafana MCP server](https:/
    export GRAFANA_SERVICE_ACCOUNT_TOKEN="<your token>"
    ```
 
+   For Grafana Cloud, use your instance URL instead (e.g. `https://myinstance.grafana.net`).
+
 4. Install the plugin from the Cursor Marketplace.
 
 ## What's included
 
-- **MCP server** (`mcp.json`) — configures the official `mcp-grafana` binary, providing 40+ tools for dashboards, datasources, Prometheus, Loki, alerting, incidents, OnCall, annotations, and more.
+- **MCP server** (`mcp.json`) — runs the official `grafana/mcp-grafana` Docker image in stdio mode, providing 40+ tools for dashboards, datasources, Prometheus, Loki, alerting, incidents, OnCall, annotations, and more.
 - **Rule** (`rules/grafana-assistant.mdc`) — best practices for using Grafana MCP tools effectively (context window management, write safety, deeplinks).
 
 See [plugins/grafana/README.md](plugins/grafana/README.md) for the full tool reference.

@@ -4,20 +4,12 @@ Cursor plugin that exposes the official [Grafana MCP server](https://github.com/
 
 ## Included components
 
-- `mcp.json` — MCP server configuration for `mcp-grafana`
+- `mcp.json` — MCP server configuration for `mcp-grafana` (via Docker)
 - `rules/grafana-assistant.mdc` — best practices for using Grafana tools effectively
 
 ## Prerequisites
 
-1. Install `mcp-grafana` (choose one):
-
-   ```bash
-   # From source (requires Go)
-   go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest
-
-   # Or download a binary from GitHub releases
-   # https://github.com/grafana/mcp-grafana/releases
-   ```
+1. [Docker](https://docs.docker.com/get-docker/) must be installed and running.
 
 2. Create a [service account](https://grafana.com/docs/grafana/latest/administration/service-accounts/) in Grafana with at least **Viewer** role (or **Editor** for write operations). Generate a token.
 
@@ -27,6 +19,8 @@ Cursor plugin that exposes the official [Grafana MCP server](https://github.com/
    export GRAFANA_URL="http://localhost:3000"
    export GRAFANA_SERVICE_ACCOUNT_TOKEN="<your token>"
    ```
+
+   For Grafana Cloud, use your instance URL instead (e.g. `https://myinstance.grafana.net`).
 
 ## Available tools
 
