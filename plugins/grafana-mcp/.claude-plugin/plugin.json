@@ -1,6 +1,5 @@
 {
   "name": "grafana-mcp",
-  "displayName": "Grafana MCP",
   "version": "0.1.0",
   "description": "MCP server for AI-assisted Grafana dashboard, datasource, alerting, and incident management.",
   "author": {
@@ -8,6 +7,5 @@
     "email": "grafana-assistant@grafana.com"
   },
   "license": "Apache-2.0",
-  "keywords": ["grafana", "mcp", "observability", "dashboards", "prometheus", "loki"],
-  "logo": "assets/logo.svg"
+  "keywords": ["grafana", "mcp", "observability", "dashboards", "prometheus", "loki"]
 }
