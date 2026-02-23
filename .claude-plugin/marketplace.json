@@ -10,9 +10,14 @@
   },
   "plugins": [
     {
-      "name": "grafana",
-      "source": "./plugins/grafana",
-      "description": "Grafana plugin for AI-assisted observability workflows"
+      "name": "grafana-assistant",
+      "source": "./plugins/grafana-assistant",
+      "description": "Skills and rules for developing and using the Grafana Assistant app and CLI"
+    },
+    {
+      "name": "grafana-mcp",
+      "source": "./plugins/grafana-mcp",
+      "description": "MCP server for AI-assisted Grafana dashboard, datasource, alerting, and incident management"
     }
   ]
 }

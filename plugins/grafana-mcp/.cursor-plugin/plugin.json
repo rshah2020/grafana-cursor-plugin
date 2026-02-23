@@ -1,8 +1,8 @@
 {
-  "name": "grafana",
-  "displayName": "Grafana",
+  "name": "grafana-mcp",
+  "displayName": "Grafana MCP",
   "version": "0.1.0",
-  "description": "Grafana plugin with MCP server for AI-assisted dashboard, datasource, alerting, and incident management.",
+  "description": "MCP server for AI-assisted Grafana dashboard, datasource, alerting, and incident management.",
   "author": {
     "name": "Grafana Labs",
     "email": "plugins@grafana.com"

@@ -1,0 +1,13 @@
+{
+  "name": "grafana-assistant",
+  "displayName": "Grafana Assistant",
+  "version": "0.1.0",
+  "description": "Skills and rules for developing and using the Grafana Assistant app and CLI.",
+  "author": {
+    "name": "Grafana Labs",
+    "email": "plugins@grafana.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["grafana", "assistant", "a2a", "cli"],
+  "logo": "assets/logo.svg"
+}
